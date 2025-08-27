@@ -1,0 +1,21 @@
+{
+  "transformers": [
+    {
+      "path": "/root/.claude-code-router/plugins/codex-cli.js",
+      "options": {
+        "apiKey": "YOUR_CODEX_API_KEY",
+        "endpoint": "https://api.openai.com/v1/engines/codex/completions",
+        "model": "code-davinci-002"
+      }
+    }
+  ],
+  "Providers": [
+    {
+      "name": "codex-cli",
+      "api_base_url": "http://localhost:3456/codex",
+      "api_key": "placeholder",
+      "models": ["code-davinci-002", "code-cushman-001"],
+      "transformer": { "use": ["codex-cli"] }
+    }
+  ]
+}
