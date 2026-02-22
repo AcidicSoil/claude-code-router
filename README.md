@@ -1,15 +1,19 @@
-# Claude Code Router
+![](blog/images/claude-code-router-img.png)
 
-I am seeking funding support for this project to better sustain its development. If you have any ideas, feel free to reach out to me: [m@musiiot.top](mailto:m@musiiot.top)
+[![](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%B3-%E4%B8%AD%E6%96%87%E7%89%88-ff0000?style=flat)](README_zh.md)
+[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?&logo=discord&logoColor=white)](https://discord.gg/rdftVMaUcS)
+[![](https://img.shields.io/github/license/musistudio/claude-code-router)](https://github.com/musistudio/claude-code-router/blob/main/LICENSE)
 
+<hr>
 
-[中文版](README_zh.md)
+![](blog/images/sponsors/glm-en.jpg)
+> This project is sponsored by Z.ai, supporting us with their GLM CODING PLAN.    
+> GLM CODING PLAN is a subscription service designed for AI coding, starting at just $3/month. It provides access to their flagship GLM-4.7 model across 10+ popular AI coding tools (Claude Code, Cline, Roo Code, etc.), offering developers top-tier, fast, and stable coding experiences.     
+> Get 10% OFF GLM CODING PLAN：https://z.ai/subscribe?ic=8JVLJQFSKB     
+
+> [Progressive Disclosure of Agent Tools from the Perspective of CLI Tool Style](/blog/en/progressive-disclosure-of-agent-tools-from-the-perspective-of-cli-tool-style.md)
 
 > A powerful tool to route Claude Code requests to different models and customize any request.
-
-> Now you can use models such as `GLM-4.5`, `Kimi-K2`, `Qwen3-Coder-480B-A35B`, and `DeepSeek v3.1` for free through the [iFlow Platform](https://platform.iflow.cn/docs/api-mode).     
-> You can use the `ccr ui` command to directly import the `iflow` template in the UI. It’s worth noting that iFlow limits each user to a concurrency of 1, which means you’ll need to route background requests to other models.      
-> If you’d like a better experience, you can try [iFlow CLI](https://cli.iflow.cn).
 
 ![](blog/images/claude-code.png)
 
@@ -19,6 +23,7 @@ I am seeking funding support for this project to better sustain its development.
 - **Multi-Provider Support**: Supports various model providers like OpenRouter, DeepSeek, Ollama, Gemini, Volcengine, and SiliconFlow.
 - **Request/Response Transformation**: Customize requests and responses for different providers using transformers.
 - **Dynamic Model Switching**: Switch models on-the-fly within Claude Code using the `/model` command.
+- **CLI Model Management**: Manage models and providers directly from the terminal with `ccr model`.
 - **GitHub Actions Integration**: Trigger Claude Code tasks in your GitHub workflows.
 - **Plugin System**: Extend functionality with custom transformers.
 
@@ -224,6 +229,96 @@ This will open a web-based interface where you can easily view and edit your `co
 
 ![UI](/blog/images/ui.png)
 
+### 5. CLI Model Management
+
+For users who prefer terminal-based workflows, you can use the interactive CLI model selector:
+
+```shell
+ccr model
+```
+![](blog/images/models.gif)
+
+This command provides an interactive interface to:
+
+- View current configuration:
+- See all configured models (default, background, think, longContext, webSearch, image)
+- Switch models: Quickly change which model is used for each router type
+- Add new models: Add models to existing providers
+- Create new providers: Set up complete provider configurations including:
+   - Provider name and API endpoint
+   - API key
+   - Available models
+   - Transformer configuration with support for:
+     - Multiple transformers (openrouter, deepseek, gemini, etc.)
+     - Transformer options (e.g., maxtoken with custom limits)
+     - Provider-specific routing (e.g., OpenRouter provider preferences)
+
+The CLI tool validates all inputs and provides helpful prompts to guide you through the configuration process, making it easy to manage complex setups without editing JSON files manually.
+
+### 6. Presets Management
+
+Presets allow you to save, share, and reuse configurations easily. You can export your current configuration as a preset and install presets from files or URLs.
+
+```shell
+# Export current configuration as a preset
+ccr preset export my-preset
+
+# Export with metadata
+ccr preset export my-preset --description "My OpenAI config" --author "Your Name" --tags "openai,production"
+
+# Install a preset from local directory
+ccr preset install /path/to/preset
+
+# List all installed presets
+ccr preset list
+
+# Show preset information
+ccr preset info my-preset
+
+# Delete a preset
+ccr preset delete my-preset
+```
+
+**Preset Features:**
+- **Export**: Save your current configuration as a preset directory (with manifest.json)
+- **Install**: Install presets from local directories
+- **Sensitive Data Handling**: API keys and other sensitive data are automatically sanitized during export (marked as `{{field}}` placeholders)
+- **Dynamic Configuration**: Presets can include input schemas for collecting required information during installation
+- **Version Control**: Each preset includes version metadata for tracking updates
+
+**Preset File Structure:**
+```
+~/.claude-code-router/presets/
+├── my-preset/
+│   └── manifest.json    # Contains configuration and metadata
+```
+
+### 7. Activate Command (Environment Variables Setup)
+
+The `activate` command allows you to set up environment variables globally in your shell, enabling you to use the `claude` command directly or integrate Claude Code Router with applications built using the Agent SDK.
+
+To activate the environment variables, run:
+
+```shell
+eval "$(ccr activate)"
+```
+
+This command outputs the necessary environment variables in shell-friendly format, which are then set in your current shell session. After activation, you can:
+
+- **Use `claude` command directly**: Run `claude` commands without needing to use `ccr code`. The `claude` command will automatically route requests through Claude Code Router.
+- **Integrate with Agent SDK applications**: Applications built with the Anthropic Agent SDK will automatically use the configured router and models.
+
+The `activate` command sets the following environment variables:
+
+- `ANTHROPIC_AUTH_TOKEN`: API key from your configuration
+- `ANTHROPIC_BASE_URL`: The local router endpoint (default: `http://127.0.0.1:3456`)
+- `NO_PROXY`: Set to `127.0.0.1` to prevent proxy interference
+- `DISABLE_TELEMETRY`: Disables telemetry
+- `DISABLE_COST_WARNINGS`: Disables cost warnings
+- `API_TIMEOUT_MS`: API timeout from your configuration
+
+> **Note**: Make sure the Claude Code Router service is running (`ccr start`) before using the activated environment variables. The environment variables are only valid for the current shell session. To make them persistent, you can add `eval "$(ccr activate)"` to your shell configuration file (e.g., `~/.zshrc` or `~/.bashrc`).
+
 #### Providers
 
 The `Providers` array is where you define the different model providers you want to use. Each provider object requires:
@@ -319,6 +414,7 @@ Transformers allow you to modify the request and response payloads to ensure com
 - `enhancetool`: Adds a layer of error tolerance to the tool call parameters returned by the LLM (this will cause the tool call information to no longer be streamed).
 - `cleancache`: Clears the `cache_control` field from requests.
 - `vertex-gemini`: Handles the Gemini API using Vertex authentication.
+- `chutes-glm` Unofficial support for GLM 4.5 model via Chutes [chutes-glm-transformer.js](https://gist.github.com/vitobotta/2be3f33722e05e8d4f9d2b0138b8c863).
 - `qwen-cli` (experimental): Unofficial support for qwen3-coder-plus model via Qwen CLI [qwen-cli.js](https://gist.github.com/musistudio/f5a67841ced39912fd99e42200d5ca8b).
 - `rovo-cli` (experimental): Unofficial support for gpt-5 via Atlassian Rovo Dev CLI [rovo-cli.js](https://gist.github.com/SaseQ/c2a20a38b11276537ec5332d1f7a5e53).
 
@@ -349,8 +445,9 @@ The `Router` object defines which model to use for different scenarios:
 - `longContext`: A model for handling long contexts (e.g., > 60K tokens).
 - `longContextThreshold` (optional): The token count threshold for triggering the long context model. Defaults to 60000 if not specified.
 - `webSearch`: Used for handling web search tasks and this requires the model itself to support the feature. If you're using openrouter, you need to add the `:online` suffix after the model name.
+- `image` (beta): Used for handling image-related tasks (supported by CCR’s built-in agent). If the model does not support tool calling, you need to set the `config.forceUseImageAgent` property to `true`.
 
-You can also switch models dynamically in Claude Code with the `/model` command:
+- You can also switch models dynamically in Claude Code with the `/model` command:
 `/model provider_name,model_name`
 Example: `/model openrouter,anthropic/claude-3.5-sonnet`
 
@@ -477,6 +574,7 @@ This setup allows for interesting automations, like running tasks during off-pea
 
 - [Project Motivation and How It Works](blog/en/project-motivation-and-how-it-works.md)
 - [Maybe We Can Do More with the Router](blog/en/maybe-we-can-do-more-with-the-route.md)
+- [GLM-4.6 Supports Reasoning and Interleaved Thinking](blog/en/glm-4.6-supports-reasoning.md)
 
 ## ❤️ Support & Sponsoring
 
@@ -500,6 +598,8 @@ A huge thank you to all our sponsors for their generous support!
 
 - [AIHubmix](https://aihubmix.com/)
 - [BurnCloud](https://ai.burncloud.com)
+- [302.AI](https://share.302.ai/ZGVF9w)
+- [Z智谱](https://www.bigmodel.cn/claude-code?ic=FPF9IVAGFJ)
 - @Simon Leischnig
 - [@duanshuaimin](https://github.com/duanshuaimin)
 - [@vrgitadmin](https://github.com/vrgitadmin)
@@ -544,7 +644,7 @@ A huge thank you to all our sponsors for their generous support!
 - @b\*g
 - @\*亿
 - @\*辉
-- @JACK 
+- @JACK
 - @\*光
 - @W\*l
 - [@kesku](https://github.com/kesku)
@@ -562,5 +662,43 @@ A huge thank you to all our sponsors for their generous support!
 - [@qierkang](http://github.com/qierkang)
 - @\*军
 - [@snrise-z](http://github.com/snrise-z)
+- @\*王
+- [@greatheart1000](http://github.com/greatheart1000)
+- @\*王
+- @zcutlip
+- [@Peng-YM](http://github.com/Peng-YM)
+- @\*更
+- @\*.
+- @F\*t
+- @\*政
+- @\*铭
+- @\*叶
+- @七\*o
+- @\*青
+- @\*\*晨
+- @\*远
+- @\*霄
+- @\*\*吉
+- @\*\*飞
+- @\*\*驰
+- @x\*g
+- @\*\*东
+- @\*落
+- @哆\*k
+- @\*涛
+- [@苗大](https://github.com/WitMiao)
+- @\*呢
+- @\d*u
+- @crizcraig
+- s\*s
+- \*火
+- \*勤
+- \*\*锟
+- \*涛
+- \*\*明
+- \*知
+- \*语
+- \*瓜
+
 
 (If your name is masked, please contact me via my homepage email to update it with your GitHub username.)
